@@ -42,8 +42,13 @@ export class RecipeService implements IRecipeService {
         })
       })
     }
+    let output: MarketRecipeList|undefined= undefined
     if(filter?.marketKart){
-      const Recipes= items.filter(r=>r.id==filter.marketKart?.find(id=>r.id)) as Recipe[]
+    let ids=(filter.marketKart)
+      const Recipes= items.filter(r=>r.id==ids.find(id=>{
+        if(!(id==r.id)) throw new Error(" A recipe from marketKart not found.")
+        return true
+      })) as Recipe[]
       const recipesOutput:{nameRecipe: string, id:string}[]=Recipes.map(r=>{
         return{
           nameRecipe: r.title,
@@ -58,21 +63,31 @@ export class RecipeService implements IRecipeService {
         return true
       })
       
-      const ingredientsOutput:{ id: string, nameIngredient: string,Quantity:number, unit:string}[]=Ingredients.map(i=>{
-        let ingredient=Recipes.find(r=>r.ingredients.find(I=>I.ingredientId==i.id)?.ingredientId==i.id)?.ingredients.find(I=>I.ingredientId==I.ingredientId)
-        return{
+      const ingredientsOutput = Ingredients.map(i => {
+        const recipe = Recipes.find(r =>
+          r.ingredients.some(ing => ing.ingredientId === i.id)
+        )
+
+        const ingredient = recipe?.ingredients.find(
+          ing => ing.ingredientId === i.id
+        )
+
+        if (!ingredient) return null
+
+        return {
           id: i.id,
           nameIngredient: i.name,
-          Quantity:ingredient!.quantity,
-          unit:ingredient!.unit
+          Quantity: ingredient.quantity,
+          unit: ingredient.unit
         }
-      }) 
-      
-      return {
+    })
+
+      output= {
           ingredients:ingredientsOutput,
           recipes:recipesOutput
-      }
+      } as MarketRecipeList
     }
+    if(output) return output
     items=items.filter((recipe) => {
       if(recipe.state==="Published") return true
       return false

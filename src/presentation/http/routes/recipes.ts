@@ -6,11 +6,12 @@ export function recipesRoutes(service: IRecipeService) {
 
   router.get("/", async (req, res, next) => {
     try {
+      const { ids } = req.body.MarketRecipeList
       const items = await service.list({
         categoryId: req.query.categoryId as string | undefined,
         categoryName: req.query.categoryName as string | undefined,
         search: req.query.search as string | undefined,
-        marketKart: req.query.marketKart as Array<string>
+        marketKart: ids as Array<string>|undefined
       })
       res.json(items)
     } catch (error) {
