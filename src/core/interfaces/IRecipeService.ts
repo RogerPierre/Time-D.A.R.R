@@ -8,5 +8,6 @@ export interface IRecipeService {
   delete(id: string): Promise<void>
   publish(id: string): Promise<void>
   arquive(id: string): Promise<void>
-  escalarReceita(id: string, novasPorcoes: number): Promise<Recipe>
+ scaleRecipe(id: string, servings: number): Promise<Recipe>
+
 }
