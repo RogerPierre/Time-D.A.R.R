@@ -1,15 +1,16 @@
 import crypto from "node:crypto"
 import { store } from "./store.js"
-import { Recipe, CreateRecipeInput } from "./models.js"
+import { Recipe, CreateRecipeInput, MarketRecipeList, Ingredient } from "./models.js"
 import { CategoryService } from "./CategoryService.js"
 import { IngredientService } from "./IngredientService.js"
 import { IRecipeService } from "./interfaces/IRecipeService.js"
+import { promises } from "node:dns"
 
 export class RecipeService implements IRecipeService {
   private categoryService = new CategoryService()
   private ingredientService = new IngredientService()
 
-  async list(filter?: { categoryId?: string; categoryName?: string; search?: string }): Promise<Recipe[]> {
+  async list(filter?: { categoryId?: string; categoryName?: string; search?: string ; marketKart?: Array<string>}): Promise<Recipe[]|MarketRecipeList> {
     let categoryId = filter?.categoryId
 
     if (filter?.categoryName) {
@@ -40,6 +41,37 @@ export class RecipeService implements IRecipeService {
           return !!name && name.includes(searchQuery)
         })
       })
+    }
+    if(filter?.marketKart){
+      const Recipes= items.filter(r=>r.id==filter.marketKart?.find(id=>r.id)) as Recipe[]
+      const recipesOutput:{nameRecipe: string, id:string}[]=Recipes.map(r=>{
+        return{
+          nameRecipe: r.title,
+          id: r.id
+        }
+      })
+      let Ingredients=store.ingredients.filter(i=>{
+        let recipe=Recipes.find(r=>{
+          r.ingredients.find(I=>I.ingredientId==i.id)?.ingredientId==i.id
+        })
+        if(!(i.id===recipe?.ingredients.find(I=>I.ingredientId==i.id)?.ingredientId)) return false
+        return true
+      })
+      
+      const ingredientsOutput:{ id: string, nameIngredient: string,Quantity:number, unit:string}[]=Ingredients.map(i=>{
+        let ingredient=Recipes.find(r=>r.ingredients.find(I=>I.ingredientId==i.id)?.ingredientId==i.id)?.ingredients.find(I=>I.ingredientId==I.ingredientId)
+        return{
+          id: i.id,
+          nameIngredient: i.name,
+          Quantity:ingredient!.quantity,
+          unit:ingredient!.unit
+        }
+      }) 
+      
+      return {
+          ingredients:ingredientsOutput,
+          recipes:recipesOutput
+      }
     }
     items=items.filter((recipe) => {
       if(recipe.state==="Published") return true
