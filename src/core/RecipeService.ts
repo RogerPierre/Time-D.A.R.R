@@ -23,7 +23,10 @@ export class RecipeService implements IRecipeService {
     }
 
     let items = [...store.recipes]
-    
+    items=items.filter((recipe) => {
+    if(recipe.state==="Published") return true
+      return false
+    })
     if (categoryId) {
       items = items.filter(r => r.categoryId === categoryId)
     }
@@ -44,42 +47,58 @@ export class RecipeService implements IRecipeService {
     }
     let output: MarketRecipeList|undefined= undefined
     if(filter?.marketKart){
-    let ids=(filter.marketKart)
-      const Recipes= items.filter(r=>r.id==ids.find(id=>{
-        if(!(id==r.id)) throw new Error(" A recipe from marketKart not found.")
-        return true
-      })) as Recipe[]
-      const recipesOutput:{nameRecipe: string, id:string}[]=Recipes.map(r=>{
+      let ids= filter.marketKart as Array<string>
+      console.log(items)
+      console.log(ids)
+
+      items = items.filter(r => ids.includes(r.id))
+      
+      const recipesOutput:{nameRecipe: string, id:string}[]=items.map(r=>{
         return{
           nameRecipe: r.title,
           id: r.id
         }
       })
       let Ingredients=store.ingredients.filter(i=>{
-        let recipe=Recipes.find(r=>{
-          r.ingredients.find(I=>I.ingredientId==i.id)?.ingredientId==i.id
-        })
-        if(!(i.id===recipe?.ingredients.find(I=>I.ingredientId==i.id)?.ingredientId)) return false
-        return true
+        let ingredientsFound= items.map(r=>{
+          let ing= r.ingredients.find(I=>i.id==I.ingredientId)
+          if(ing?.ingredientId==i.id) return ing
+          return undefined
+        })   
+        if(ingredientsFound){
+          return true
+        }
+        return false
       })
       
       const ingredientsOutput = Ingredients.map(i => {
-        const recipe = Recipes.find(r =>
-          r.ingredients.some(ing => ing.ingredientId === i.id)
-        )
+        let ingredientFound= items.map(r=>{
 
-        const ingredient = recipe?.ingredients.find(
-          ing => ing.ingredientId === i.id
-        )
+          let ingredients= [...r.ingredients]
+          let ingredient=ingredients.find(I=>I.ingredientId==i.id)
 
-        if (!ingredient) return null
-
-        return {
-          id: i.id,
-          nameIngredient: i.name,
-          Quantity: ingredient.quantity,
-          unit: ingredient.unit
+          if(ingredient){
+            return ingredient
+          }
+          return{
+            ingredientId:"",
+            unit:"",
+            quantity:0
+          }
+        })
+        let quantitylist=ingredientFound.map((i)=>{
+          return i.quantity
+        })
+        let quantityReduce=quantitylist.reduce((acc,n)=>{
+          return acc+n
+        },0)
+        let outputIng:{ id: string, nameIngredient: string,Quantity:number, unit:string}={
+          id:i.id,
+          nameIngredient:i.name,
+          Quantity:quantityReduce,
+          unit:ingredientFound.find(I=>I.ingredientId==i.id)?.unit!
         }
+        return outputIng
     })
 
       output= {
@@ -88,10 +107,7 @@ export class RecipeService implements IRecipeService {
       } as MarketRecipeList
     }
     if(output) return output
-    items=items.filter((recipe) => {
-      if(recipe.state==="Published") return true
-      return false
-    })
+    
     
     return items
   }
@@ -230,17 +246,8 @@ export class RecipeService implements IRecipeService {
     if (!recipe) throw new Error("Recipe not found.")
     if(recipe.state==="Published") throw new Error("The recipe has already been published.")
     if(recipe.state==="Arquived") throw new Error("This recipe is filed away.")
-    store.recipes[store.recipes.indexOf(recipe)] = {
-      id: recipe.id,
-      title:recipe.title,
-      description:recipe.description,
-      ingredients: recipe.ingredients,
-      steps:recipe.steps,
-      servings:recipe.servings,
-      categoryId: recipe.categoryId,
-      createdAt: recipe.createdAt,
-      state: "Published"
-    }
+
+    store.recipes[store.recipes.indexOf(recipe)].state = "Published"
   }
   async arquive(id: string): Promise<void> {
     const recipe = store.recipes.find(r => r.id === id)
