@@ -5,6 +5,7 @@ import { CategoryService } from "./CategoryService.js"
 import { IngredientService } from "./IngredientService.js"
 import { IRecipeService } from "./interfaces/IRecipeService.js"
 import { promises } from "node:dns"
+import { error } from "node:console"
 
 export class RecipeService implements IRecipeService {
   private categoryService = new CategoryService()
@@ -52,6 +53,7 @@ export class RecipeService implements IRecipeService {
       console.log(ids)
 
       items = items.filter(r => ids.includes(r.id))
+      if(items.length<=0) return []
       
       const recipesOutput:{nameRecipe: string, id:string}[]=items.map(r=>{
         return{
@@ -61,33 +63,36 @@ export class RecipeService implements IRecipeService {
       })
       let Ingredients=store.ingredients.filter(i=>{
         let ingredientsFound= items.map(r=>{
+
           let ing= r.ingredients.find(I=>i.id==I.ingredientId)
           if(ing?.ingredientId==i.id) return ing
+
           return undefined
         })   
-        if(ingredientsFound){
-          return true
+        for(let ingredientSelec of ingredientsFound){
+          if(!ingredientSelec) return false
         }
-        return false
+        return true
       })
       
       const ingredientsOutput = Ingredients.map(i => {
         let ingredientFound= items.map(r=>{
-
           let ingredients= [...r.ingredients]
-          let ingredient=ingredients.find(I=>I.ingredientId==i.id)
+          let ingredient= ingredients.find(I=>I.ingredientId==i.id)
 
-          if(ingredient){
+          if(ingredient&&r.state=="Published"){
             return ingredient
           }
-          return{
-            ingredientId:"",
-            unit:"",
-            quantity:0
-          }
+
+          else return undefined
         })
-        let quantitylist=ingredientFound.map((i)=>{
-          return i.quantity
+        console.log(ingredientFound)
+        if(ingredientFound.length<=0) return undefined
+
+        ingredientFound=  ingredientFound.filter(I=>I)
+
+        let quantitylist= ingredientFound.map((i)=>{
+          return i!.quantity
         })
         let quantityReduce=quantitylist.reduce((acc,n)=>{
           return acc+n
@@ -96,11 +101,12 @@ export class RecipeService implements IRecipeService {
           id:i.id,
           nameIngredient:i.name,
           Quantity:quantityReduce,
-          unit:ingredientFound.find(I=>I.ingredientId==i.id)?.unit!
+          unit:ingredientFound.find(I=>I!.ingredientId==i.id)?.unit!
         }
         return outputIng
     })
-
+      ingredientsOutput.filter(i=>i)
+      recipesOutput.filter(r=>r)
       output= {
           ingredients:ingredientsOutput,
           recipes:recipesOutput
