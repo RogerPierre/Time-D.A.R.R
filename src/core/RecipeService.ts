@@ -76,7 +76,7 @@ export class RecipeService implements IRecipeService {
       })
       
       const ingredientsOutput = Ingredients.map(i => {
-        let ingredientFound= items.map(r=>{
+        let ingredientFound= items.map(r => {
           let ingredients= [...r.ingredients]
           let ingredient= ingredients.find(I=>I.ingredientId==i.id)
 
@@ -97,7 +97,7 @@ export class RecipeService implements IRecipeService {
         let quantityReduce=quantitylist.reduce((acc,n)=>{
           return acc+n
         },0)
-        let outputIng:{ id: string, nameIngredient: string,Quantity:number, unit:string}={
+        let outputIng:{ id: string, nameIngredient: string,Quantity:number, unit:string}= {
           id:i.id,
           nameIngredient:i.name,
           Quantity:quantityReduce,
