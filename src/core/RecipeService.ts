@@ -49,8 +49,6 @@ export class RecipeService implements IRecipeService {
     let output: MarketRecipeList|undefined= undefined
     if(filter?.marketKart){
       let ids= filter.marketKart as Array<string>
-      console.log(items)
-      console.log(ids)
 
       items = items.filter(r => ids.includes(r.id))
       if(items.length<=0) return []
@@ -65,34 +63,22 @@ export class RecipeService implements IRecipeService {
         let ingredientsFound= items.map(r=>{
 
           let ing= r.ingredients.find(I=>i.id==I.ingredientId)
-          if(ing?.ingredientId==i.id) return ing
+           return ing
 
-          return undefined
         })   
-        for(let ingredientSelec of ingredientsFound){
-          if(!ingredientSelec) return false
-        }
-        return true
+        return ingredientsFound.find(I=>I?.ingredientId==i.id)!=undefined
       })
       
       const ingredientsOutput = Ingredients.map(i => {
         let ingredientFound= items.map(r => {
           let ingredients= [...r.ingredients]
           let ingredient= ingredients.find(I=>I.ingredientId==i.id)
-
-          if(ingredient&&r.state=="Published"){
-            return ingredient
-          }
-
-          else return undefined
+          return ingredient
         })
-        console.log(ingredientFound)
-        if(ingredientFound.length<=0) return undefined
+        ingredientFound= ingredientFound.filter(I=> I != undefined)
 
-        ingredientFound=  ingredientFound.filter(I=>I)
-
-        let quantitylist= ingredientFound.map((i)=>{
-          return i!.quantity
+        let quantitylist= ingredientFound.map((I)=>{
+          return I!.quantity
         })
         let quantityReduce=quantitylist.reduce((acc,n)=>{
           return acc+n
@@ -103,10 +89,11 @@ export class RecipeService implements IRecipeService {
           Quantity:quantityReduce,
           unit:ingredientFound.find(I=>I!.ingredientId==i.id)?.unit!
         }
+        console.log(outputIng)
         return outputIng
     })
-      ingredientsOutput.filter(i=>i)
-      recipesOutput.filter(r=>r)
+        console.log(ingredientsOutput)
+
       output= {
           ingredients:ingredientsOutput,
           recipes:recipesOutput
