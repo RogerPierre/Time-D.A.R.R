@@ -263,7 +263,7 @@ TIME-DA.R.R/
 ## Composição do servidor
 - O servidor instancia diretamente os repositórios em memória e os serviços.
 
-### Observação sobre DTOs de criação
+## Observação sobre DTOs de criação
 - Os repositórios recebem entidades já criadas com `id` e `createdAt` (gerados pela fábrica/serviço).
 - As requisições HTTP enviam apenas os campos de entrada (ex.: `{ name }` para categoria/ingrediente; `{ title, description?, ingredients[], steps[], categoryId }` para receita).
 
