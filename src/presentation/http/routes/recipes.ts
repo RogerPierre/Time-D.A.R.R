@@ -10,7 +10,7 @@ export function recipesRoutes(service: IRecipeService) {
         categoryId: req.query.categoryId as string | undefined,
         categoryName: req.query.categoryName as string | undefined,
         search: req.query.search as string | undefined,
-        marketKart: req.query.marketKart as Array<string>
+        marketKart: req.query.marketKart as Array<string>|undefined,
       })
       res.json(items)
     } catch (error) {
