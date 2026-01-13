@@ -96,6 +96,13 @@ Receitas
 - `PUT /recipes/:id` — atualiza parcial dos mesmos campos
 - `DELETE /recipes/:id` — remove
 
+Implementações recentes (desde commit 9786f255...)
+- `PUT /recipes/:id/Publish` — publica uma receita (muda `state` de `Draft` para `Published`).
+- `PUT /recipes/:id/Archive` — arquiva uma receita (muda `state` de `Published`para `Arquived`).
+- `GET /recipes/:id/scale` — retorna uma versão escalada da receita (espera `servings` no corpo da requisição).
+- `GET /recipes?marketKart=` — aceita uma lista de IDs de receitas e retorna um objeto agregado com `recipes` e a lista de `ingredients` necessários (quantidades somadas) para as receitas selecionadas.
+
+
 Códigos de erro: as validações retornam `400` com `{ error: "mensagem" }` (middleware em `src/presentation/http/middlewares/errorHandler.ts`).
 
 ## Clientes HTTP (Insomnia/Postman)
