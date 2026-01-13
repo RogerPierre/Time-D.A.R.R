@@ -11,8 +11,14 @@ Aplicação em camadas (SRP) construída com Node.js, TypeScript e Express, com 
 - Endpoints
 - Exemplos rápidos (Windows)
 - Estrutura do projeto
+- Descrição das pastas
+- Funcionalidades Implementadas
+- Objetivo Acadêmico
+- Autores
 
 ## Visão Geral
+- Este projeto foi desenvolvido como trabalho prático da disciplina de Engenharia de Software, com o objetivo de evoluir um sistema previamente existente, aplicando conceitos teóricos vistos em sala de aula em um contexto prático e próximo da realidade do mercado.
+- O foco principal não está na criação do sistema do zero, mas sim na compreensão da arquitetura existente, manutenção do código, implementação de novas funcionalidades e justificativa das decisões técnicas adotadas.
 - CRUD de Categorias, Ingredientes e Receitas.
 - Busca e filtragem de receitas por `categoryId` e por texto (`search`).
 - Regras de negócio:
@@ -167,37 +173,97 @@ Códigos de erro: as validações retornam `400` com `{ error: "mensagem" }` (mi
 
 ## Estrutura do projeto
 ```
-receitas/
-├─ src/
-│  ├─ core/
-│  │  ├─ CategoryService.ts
-│  │  ├─ IngredientService.ts
-│  │  ├─ RecipeService.ts
-│  │  ├─ models.ts
-│  │  └─ store.ts
-│  └─ presentation/
-│     └─ http/
-│        ├─ middlewares/errorHandler.ts
-│        ├─ routes/categories.ts
-│        ├─ routes/ingredients.ts
-│        ├─ routes/recipes.ts
-│        └─ server.ts
+TIME-DA.R.R/
+├─ .vscode/
+│  └─ settings.json
 ├─ requests/
-│  ├─ category.json
-│  ├─ ingredient.json
-│  ├─ ingredient-update.json
-│  ├─ recipe.json
+│  ├─ docs/
+│  │  └─ diagrams/
+│  │     ├─ class-diagram.puml
+│  │     ├─ package-diagram.puml
+│  │     └─ use-case-diagram.puml
+│  ├─ Insomnia_2026-01-12.yaml
+│  ├─ Insomnia_2026-01-04.yaml
+│  ├─ Insomnia_2026-01-13.yaml
 │  ├─ Insomnia_recipes_requests.yaml
 │  └─ recipes_requests.yaml
+├─ src/
+│  ├─ core/
+│  │  ├─ interfaces/
+│  │  │  ├─ CategoryService.ts
+│  │  │  ├─ IngredientService.ts
+│  │  │  └─ RecipeService.ts
+│  │  ├─ models.ts
+│  │  ├─ store.ts
+│  │  ├─ CategoryService.ts
+│  │  ├─ IngredientService.ts
+│  │  └─ RecipeService.ts
+│  └─ presentation/
+│     └─ http/
+│        ├─ middlewares/
+│        │  └─ errorHandler.ts
+│        ├─ routes/
+│        │  ├─ categories.ts
+│        │  ├─ ingredients.ts
+│        │  └─ recipes.ts
+│        └─ server.ts
+├─ .gitignore
 ├─ package.json
+├─ package-lock.json
 ├─ tsconfig.json
 └─ README.md
 ```
 
+## Descrição das pastas 
+- .vscode/: Configurações locais do VS Code.
+- requests/: Coleções do Insomnia e exemplos de requisições para testes da API.
+- requests/docs/diagrams: Diagramas UML (casos de uso, classes e pacotes).
+- src/core: Camada de domínio (regras de negócio, serviços, interfaces e modelos).
+- src/presentation/http: Camada de apresentação (Express, rotas, middlewares e servidor).
+- README.md: Documentação principal do projeto.
+
+## Funcionalidades Implementadas
+- Durante a evolução do sistema, foram implementadas e/ou consolidadas as seguintes funcionalidades:
+
+- Categorias
+  - CRUD completo (criar, listar, detalhar, atualizar e remover)
+  - Validação de nome único
+  - Regra de bloqueio de exclusão quando houver receitas associadas
+
+- Ingredientes
+  - CRUD completo
+  - Validação de nome único
+
+- Receitas
+  - CRUD completo
+  - Associação obrigatória com categoria
+  - Cadastro de ingredientes com quantidade e unidade
+  - Cadastro de passos de preparo
+  - Definição de número de porções
+  - Filtro de listagem por categoria
+  - Busca textual por título, descrição e ingredientes
+
+- API HTTP
+  - Endpoints REST organizados por recurso
+  - Tratamento centralizado de erros com middleware
+  - Respostas padronizadas em JSON
+
+- Testes
+  - Criação e uso de coleções no Insomnia
+  - Requests de exemplo para validação manual da API
+
+## Objetivo Acadêmico
+- Este projeto reforça conceitos como:
+  - Evolução de software existente
+  - Separação de responsabilidades
+  - Organização em camadas
+  - Boas práticas de Git/GitHub
+  - Documentação e testes de API
+    
 ## Composição do servidor
 - O servidor instancia diretamente os repositórios em memória e os serviços.
 
-### Observação sobre DTOs de criação
+## Observação sobre DTOs de criação
 - Os repositórios recebem entidades já criadas com `id` e `createdAt` (gerados pela fábrica/serviço).
 - As requisições HTTP enviam apenas os campos de entrada (ex.: `{ name }` para categoria/ingrediente; `{ title, description?, ingredients[], steps[], categoryId }` para receita).
 
@@ -205,3 +271,9 @@ receitas/
 - `npm run dev` — inicia em modo desenvolvimento (ts-node)
 - `npm run build` — compila TypeScript
 - `npm start` — executa o build compilado
+
+## Autores
+- Antonio Carlos Gomes
+- Deric Rodrigues de Sousa
+- Raira Reis Silva
+- ROGER PIERRE REIS SILVA
