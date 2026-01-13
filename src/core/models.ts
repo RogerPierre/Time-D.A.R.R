@@ -1,3 +1,5 @@
+import { ingredientsRoutes } from "../presentation/http/routes/ingredients.js"
+
 export type Category = {
   id: string
   name: string
@@ -19,6 +21,7 @@ export type Recipe = {
   servings: number
   categoryId: string
   createdAt: Date
+  state: "Draft"|"Published"|"Arquived"
 }
 
 export type CreateRecipeInput = {
@@ -28,4 +31,9 @@ export type CreateRecipeInput = {
   steps: string[]
   servings: number
   categoryId: string
+  state: "Draft"|"Published"|"Arquived"
+}
+export type MarketRecipeList={
+  ingredients:{ id: string, nameIngredient: string,Quantity:number, unit:string}[]
+  recipes:{nameRecipe: string, id:string}[]
 }

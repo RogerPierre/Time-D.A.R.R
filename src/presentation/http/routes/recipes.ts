@@ -10,6 +10,7 @@ export function recipesRoutes(service: IRecipeService) {
         categoryId: req.query.categoryId as string | undefined,
         categoryName: req.query.categoryName as string | undefined,
         search: req.query.search as string | undefined,
+        marketKart: req.query.marketKart as Array<string>|undefined,
       })
       res.json(items)
     } catch (error) {
@@ -41,6 +42,7 @@ export function recipesRoutes(service: IRecipeService) {
         steps: Array.isArray(req.body.steps) ? req.body.steps.map(String) : [],
         servings: Number(req.body.servings ?? 0),
         categoryId: String(req.body.categoryId ?? ""),
+        state: (req.body.state ?? "Draft")
       })
       res.status(201).json(item)
     } catch (error) {
@@ -57,6 +59,7 @@ export function recipesRoutes(service: IRecipeService) {
         steps: req.body.steps,
         servings: req.body.servings,
         categoryId: req.body.categoryId,
+        state:req.body.state
       })
       res.json(item)
     } catch (error) {
@@ -72,7 +75,35 @@ export function recipesRoutes(service: IRecipeService) {
       next(error)
     }
   })
+  router.put("/:id/Publish", async (req, res ,next)=>{
+    try {
+      const item = await service.publish(req.params.id)
+      res.json(item)
+    } catch (error) {
+      next(error)
+    }
+  })
+  router.put("/:id/Archive", async (req, res ,next)=>{
+    try {
+      const item = await service.arquive(req.params.id)
+      res.json(item)
+    } catch (error) {
+      next(error)
+    }
+  })
 
+   router.get("/:id/scale", async (req, res, next) => {
+    try {
+      const id = req.params.id
+      const servings = Number(req.body.servings)
+
+      const receitaEscalada = await service.scaleRecipe(id, servings)
+
+      res.json(receitaEscalada)
+    } catch (error) {
+      next(error)
+    }
+  })
   return router
-}
 
+}

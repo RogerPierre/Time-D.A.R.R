@@ -1,15 +1,17 @@
 import crypto from "node:crypto"
 import { store } from "./store.js"
-import { Recipe, CreateRecipeInput } from "./models.js"
+import { Recipe, CreateRecipeInput, MarketRecipeList, Ingredient } from "./models.js"
 import { CategoryService } from "./CategoryService.js"
 import { IngredientService } from "./IngredientService.js"
 import { IRecipeService } from "./interfaces/IRecipeService.js"
+import { promises } from "node:dns"
+import { error } from "node:console"
 
 export class RecipeService implements IRecipeService {
   private categoryService = new CategoryService()
   private ingredientService = new IngredientService()
 
-  async list(filter?: { categoryId?: string; categoryName?: string; search?: string }): Promise<Recipe[]> {
+  async list(filter?: { categoryId?: string; categoryName?: string; search?: string ; marketKart?: Array<string>}): Promise<Recipe[]|MarketRecipeList> {
     let categoryId = filter?.categoryId
 
     if (filter?.categoryName) {
@@ -22,7 +24,10 @@ export class RecipeService implements IRecipeService {
     }
 
     let items = [...store.recipes]
-    
+    items=items.filter((recipe) => {
+    if(recipe.state==="Published") return true
+      return false
+    })
     if (categoryId) {
       items = items.filter(r => r.categoryId === categoryId)
     }
@@ -35,18 +40,75 @@ export class RecipeService implements IRecipeService {
       items = items.filter((recipe) => {
         if (recipe.title.toLowerCase().includes(searchQuery)) return true
         if (recipe.description && recipe.description.toLowerCase().includes(searchQuery)) return true
-        return recipe.ingredients.some((ingredient) => {
+          return recipe.ingredients.some((ingredient) => {
           const name = nameById.get(ingredient.ingredientId)
           return !!name && name.includes(searchQuery)
         })
       })
     }
+    let output: MarketRecipeList|undefined= undefined
+    if(filter?.marketKart){
+      let ids= filter.marketKart as Array<string>
+
+      items = items.filter(r => ids.includes(r.id))
+      if(items.length<=0) return []
+      
+      const recipesOutput:{nameRecipe: string, id:string}[]=items.map(r=>{
+        return{
+          nameRecipe: r.title,
+          id: r.id
+        }
+      })
+      let Ingredients=store.ingredients.filter(i=>{
+        let ingredientsFound= items.map(r=>{
+
+          let ing= r.ingredients.find(I=>i.id==I.ingredientId)
+           return ing
+
+        })   
+        return ingredientsFound.find(I=>I?.ingredientId==i.id)!=undefined
+      })
+      
+      const ingredientsOutput = Ingredients.map(i => {
+        let ingredientFound= items.map(r => {
+          let ingredients= [...r.ingredients]
+          let ingredient= ingredients.find(I=>I.ingredientId==i.id)
+          return ingredient
+        })
+        ingredientFound= ingredientFound.filter(I=> I != undefined)
+
+        let quantitylist= ingredientFound.map((I)=>{
+          return I!.quantity
+        })
+        let quantityReduce=quantitylist.reduce((acc,n)=>{
+          return acc+n
+        },0)
+        let outputIng:{ id: string, nameIngredient: string,Quantity:number, unit:string}= {
+          id:i.id,
+          nameIngredient:i.name,
+          Quantity:quantityReduce,
+          unit:ingredientFound.find(I=>I!.ingredientId==i.id)?.unit!
+        }
+        console.log(outputIng)
+        return outputIng
+    })
+        console.log(ingredientsOutput)
+
+      output= {
+          ingredients:ingredientsOutput,
+          recipes:recipesOutput
+      } as MarketRecipeList
+    }
+    if(output) return output
+    
+    
     return items
   }
 
   async get(id: string): Promise<Recipe> {
     const found = store.recipes.find(r => r.id === id)
     if (!found) throw new Error("Recipe not found")
+    if(found.state!=="Published") throw new Error("this isn`t published.")
     return found
   }
 
@@ -96,6 +158,7 @@ export class RecipeService implements IRecipeService {
       servings,
       categoryId: input.categoryId,
       createdAt: new Date(),
+      state: "Draft"
     }
     store.recipes.push(recipe)
     return recipe
@@ -103,6 +166,7 @@ export class RecipeService implements IRecipeService {
 
   async update(id: string, data: Partial<CreateRecipeInput>): Promise<Recipe> {
     const idx = store.recipes.findIndex(r => r.id === id)
+    if(store.recipes[idx].state==="Arquived") throw new Error("Arquived recipes can`t update")
     if (idx < 0) throw new Error("Recipe not found")
     const current = store.recipes[idx]
 
@@ -157,15 +221,62 @@ export class RecipeService implements IRecipeService {
       }
       updated.ingredients = resolved
     }
-
+    
     store.recipes[idx] = updated
     return updated
   }
 
   async delete(id: string): Promise<void> {
     const idx = store.recipes.findIndex(r => r.id === id)
+    if(store.recipes[idx].state==="Published") throw new Error("Published recipes con`t be deleted.")
     if (idx >= 0) {
       store.recipes.splice(idx, 1)
     }
   }
+  async publish(id: string): Promise<void> {
+    const recipe = store.recipes.find(r => r.id === id)
+
+    if (!recipe) throw new Error("Recipe not found.")
+    if(recipe.state==="Published") throw new Error("The recipe has already been published.")
+    if(recipe.state==="Arquived") throw new Error("This recipe is filed away.")
+
+    store.recipes[store.recipes.indexOf(recipe)].state = "Published"
+  }
+  async arquive(id: string): Promise<void> {
+    const recipe = store.recipes.find(r => r.id === id)
+
+    if (!recipe) throw new Error("Recipe not found.")
+    if(recipe.state==="Draft") throw new Error("The recipe can`t be a Draft.")
+    if(recipe.state==="Arquived") throw new Error("This recipe is filed away.")
+    recipe.state="Published"
+    store.recipes[store.recipes.indexOf(recipe)].state="Arquived"
+  }
+
+  async scaleRecipe(id: string, servings: number): Promise<Recipe> {
+  if (servings <= 0) {
+    throw new Error("Servings must be greater than zero")
+  }
+
+  const originalRecipe = store.recipes.find(r => r.id === id)
+  if (!originalRecipe) {
+    throw new Error("Recipe not found")
+  }
+
+  const factor = servings / originalRecipe.servings
+
+  const scaledIngredients = originalRecipe.ingredients.map(ingredient => ({
+    ingredientId: ingredient.ingredientId,
+    quantity: ingredient.quantity * factor,
+    unit: ingredient.unit
+  }))
+
+  return {
+    ...originalRecipe,
+    servings,
+    ingredients: scaledIngredients,
+    steps: [...originalRecipe.steps]
+  }
+}
+
+  
 }
