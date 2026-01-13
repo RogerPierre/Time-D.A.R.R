@@ -97,7 +97,7 @@ export function recipesRoutes(service: IRecipeService) {
       const id = req.params.id
       const servings = Number(req.body.servings)
 
-      const receitaEscalada = await service.escalarReceita(id, servings)
+      const receitaEscalada = await service.scaleRecipe(id, servings)
 
       res.json(receitaEscalada)
     } catch (error) {

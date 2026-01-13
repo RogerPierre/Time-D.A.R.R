@@ -252,31 +252,31 @@ export class RecipeService implements IRecipeService {
     store.recipes[store.recipes.indexOf(recipe)].state="Arquived"
   }
 
-  async escalarReceita(id: string, novasPorcoes: number): Promise<Recipe> {
-  if (novasPorcoes <= 0) {
-    throw new Error("A quantidade de porções deve ser maior que zero")
+  async scaleRecipe(id: string, servings: number): Promise<Recipe> {
+  if (servings <= 0) {
+    throw new Error("Servings must be greater than zero")
   }
 
-  const receitaOriginal = store.recipes.find(r => r.id === id)
-  if (!receitaOriginal) {
-    throw new Error("Receita não encontrada")
+  const originalRecipe = store.recipes.find(r => r.id === id)
+  if (!originalRecipe) {
+    throw new Error("Recipe not found")
   }
 
-  const fator = novasPorcoes / receitaOriginal.servings
+  const factor = servings / originalRecipe.servings
 
-  const ingredientesEscalados = receitaOriginal.ingredients.map(ingrediente => ({
-    ingredientId: ingrediente.ingredientId,
-    quantity: ingrediente.quantity * fator,
-    unit: ingrediente.unit
+  const scaledIngredients = originalRecipe.ingredients.map(ingredient => ({
+    ingredientId: ingredient.ingredientId,
+    quantity: ingredient.quantity * factor,
+    unit: ingredient.unit
   }))
 
   return {
-    ...receitaOriginal,
-    servings: novasPorcoes,
-    ingredients: ingredientesEscalados,
-    steps: [...receitaOriginal.steps]
+    ...originalRecipe,
+    servings,
+    ingredients: scaledIngredients,
+    steps: [...originalRecipe.steps]
   }
-  }
+}
 
   
 }
